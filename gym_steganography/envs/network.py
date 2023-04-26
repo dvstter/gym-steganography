@@ -15,10 +15,17 @@ def batch_normalizaiton(num_features, dim=2):
   else:
     return nn.BatchNorm1d(num_features, momentum=.1, affine=True, eps=1e-5).train()
 
+def set_activation(self, activation):
+  if activation == 'tanh':
+    self.activation = nn.Tanh()
+  elif activation == 'sigmoid':
+    self.activation = nn.Sigmoid()
+
 class WASDN(nn.Module):
-  def __init__(self, init=False):
+  def __init__(self, init=False, activation='tanh'):
     super(WASDN, self).__init__()
-    self.tanh = nn.Tanh()
+#    self.activation = nn.Tanh()
+    set_activation(self, activation)
 
     # group 1
     self.conv1_1 = nn.Conv2d(9, 16, 3, 1, padding='same')
@@ -61,13 +68,13 @@ class WASDN(nn.Module):
     self.fc7_5 = nn.Linear(512, 2)
 
     # group all together
-    self.group1 = nn.Sequential(self.conv1_1, self.tanh, self.conv1_2, self.tanh, self.pool1_3)
-    self.group2 = nn.Sequential(self.conv2_1, self.tanh, self.conv2_2, self.tanh, self.pool2_3)
-    self.group3 = nn.Sequential(self.conv3_1, self.tanh, self.conv3_2, self.tanh, self.pool3_3)
-    self.group4 = nn.Sequential(self.conv4_1, self.tanh, self.conv4_2, self.bn4_3, self.tanh, self.pool4_4)
-    self.group5 = nn.Sequential(self.conv5_1, self.tanh, self.conv5_2, self.bn5_3, self.tanh, self.pool5_4)
-    self.group6 = nn.Sequential(self.conv6_1, self.tanh, self.conv6_2, self.bn6_3, self.tanh, self.pool6_4)
-    self.group7 = nn.Sequential(self.fc7_1, self.bn7_2, self.tanh, self.fc7_3, self.bn7_4, self.tanh, self.fc7_5)
+    self.group1 = nn.Sequential(self.conv1_1, self.activation, self.conv1_2, self.activation, self.pool1_3)
+    self.group2 = nn.Sequential(self.conv2_1, self.activation, self.conv2_2, self.activation, self.pool2_3)
+    self.group3 = nn.Sequential(self.conv3_1, self.activation, self.conv3_2, self.activation, self.pool3_3)
+    self.group4 = nn.Sequential(self.conv4_1, self.activation, self.conv4_2, self.bn4_3, self.activation, self.pool4_4)
+    self.group5 = nn.Sequential(self.conv5_1, self.activation, self.conv5_2, self.bn5_3, self.activation, self.pool5_4)
+    self.group6 = nn.Sequential(self.conv6_1, self.activation, self.conv6_2, self.bn6_3, self.activation, self.pool6_4)
+    self.group7 = nn.Sequential(self.fc7_1, self.bn7_2, self.activation, self.fc7_3, self.bn7_4, self.activation, self.fc7_5)
 
     if init:
       self.apply(xavier_init)
@@ -89,27 +96,24 @@ class WASDN(nn.Module):
       return probs
 
 class RHFCN(nn.Module):
-  def __init__(self, init=False):
+  def __init__(self, init=False, activation='tanh'):
     super(RHFCN, self).__init__()
-    self.tanh = nn.Tanh()
+    set_activation(self, activation)
 
     # group 1
     self.conv1_1 = nn.Conv2d(9, 16, 3, 1, padding='same')
-#    self.conv1_2 = nn.Conv2d(16, 32, 1, 1, padding='same')
     self.conv1_2 = nn.Conv2d(16, 32, 3, 1, padding='same')
     self.bn1_3 = batch_normalizaiton(32)
     self.pool1_4 = nn.MaxPool2d(2, 2)
 
     # group 2
     self.conv2_1 = nn.Conv2d(32, 32, 3, 1, padding='same')
-#    self.conv2_2 = nn.Conv2d(32, 64, 1, 1, padding='same')
     self.conv2_2 = nn.Conv2d(32, 64, 3, 1, padding='same')
     self.bn2_3 = batch_normalizaiton(64)
     self.pool2_4 = nn.MaxPool2d(2, 2)
 
     # group3
     self.conv3_1 = nn.Conv2d(64, 64, 3, 1, padding='same')
-#    self.conv3_2 = nn.Conv2d(64, 128, 1, 1, padding='same')
     self.conv3_2 = nn.Conv2d(64, 128, 3, 1, padding='same')
     self.bn3_3 = batch_normalizaiton(128)
     self.pool3_4 = nn.MaxPool2d(2, 2)
@@ -139,14 +143,14 @@ class RHFCN(nn.Module):
     self.bn8_2 = batch_normalizaiton(2)
 
     # group all together
-    self.group1 = nn.Sequential(self.conv1_1, self.tanh, self.conv1_2, self.bn1_3, self.tanh, self.pool1_4)
-    self.group2 = nn.Sequential(self.conv2_1, self.tanh, self.conv2_2, self.bn2_3, self.tanh, self.pool2_4)
-    self.group3 = nn.Sequential(self.conv3_1, self.tanh, self.conv3_2, self.bn3_3, self.tanh, self.pool3_4)
-    self.group4 = nn.Sequential(self.conv4_1, self.tanh, self.conv4_2, self.bn4_3, self.tanh, self.pool4_4)
-    self.group5 = nn.Sequential(self.conv5_1, self.tanh, self.conv5_2, self.bn5_3, self.tanh, self.pool5_4)
-    self.group6 = nn.Sequential(self.conv6_1, self.bn6_2, self.tanh)
-    self.group7 = nn.Sequential(self.conv7_1, self.bn7_2, self.tanh)
-    self.group8 = nn.Sequential(self.conv8_1, self.bn8_2, self.tanh)
+    self.group1 = nn.Sequential(self.conv1_1, self.activation, self.conv1_2, self.bn1_3, self.activation, self.pool1_4)
+    self.group2 = nn.Sequential(self.conv2_1, self.activation, self.conv2_2, self.bn2_3, self.activation, self.pool2_4)
+    self.group3 = nn.Sequential(self.conv3_1, self.activation, self.conv3_2, self.bn3_3, self.activation, self.pool3_4)
+    self.group4 = nn.Sequential(self.conv4_1, self.activation, self.conv4_2, self.bn4_3, self.activation, self.pool4_4)
+    self.group5 = nn.Sequential(self.conv5_1, self.activation, self.conv5_2, self.bn5_3, self.activation, self.pool5_4)
+    self.group6 = nn.Sequential(self.conv6_1, self.bn6_2, self.activation)
+    self.group7 = nn.Sequential(self.conv7_1, self.bn7_2, self.activation)
+    self.group8 = nn.Sequential(self.conv8_1, self.bn8_2, self.activation)
 
     # global max pooling and logits
     self.max_pool = nn.MaxPool2d(1, 1)
@@ -158,8 +162,6 @@ class RHFCN(nn.Module):
     temp = self.group1(input_data)
     for idx, layers in enumerate([self.group2, self.group3, self.group4, self.group5, self.group6, self.group7, self.group8]):
       temp = layers(temp)
-
-    temp = self.max_pool(temp)
     return temp.reshape(temp.size()[0], 2)
 
   def get_probabilities(self, input_data, labels):

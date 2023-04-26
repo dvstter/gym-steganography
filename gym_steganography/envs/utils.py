@@ -11,7 +11,7 @@ import os
 from gym_steganography.envs.filters import Filters
 
 def get_freer_gpu():
-  os.system('nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp')
+  os.system('nvidia-smi -q -d Memory |grep -A5 GPU|grep Free >tmp')
   memory_available = [int(x.split()[2]) for x in open('tmp', 'r').readlines()]
   return np.argmax(memory_available)
 
@@ -109,17 +109,19 @@ def text_write(text_file_path, data, separator=','):
   write data into file.
 
   :param text_file_path: str, file's path
-  :param data: ndarry, shape: [height, width, 1]
+  :param data: ndarry, shape: [height, width, 1] or [height, width]
   :param separator: str
 
   :return:
     None
   """
-  height, width, _ = data.shape
+  if data.ndim == 3:
+    data = data[:,:,0]
+  height, width = data.shape
   with open(text_file_path, 'wt') as file:
     for y in range(height):
       for x in range(width):
-        file.write(f'{data[y,x,0]},')
+        file.write(f'{data[y,x]},')
       file.write('\n')
 
 def text_read_batch(text_files_list, height=200, width=576, separator=",", progress=False):
@@ -152,7 +154,7 @@ def text_write_batch(text_files_list, data, separator=','):
   write all data into text files.
 
   :param text_files_list: list, shape: [files_num]
-  :param data: ndarry, shape: [files_num, height, width, 1]
+  :param data: ndarry, shape: [files_num, height, width, 1] or [files_num, height, width]
   :param separator: str
 
   :return:
@@ -192,7 +194,7 @@ def load_model(model, path, device=None):
   elif model == 'wasdn':
     model = WASDN()
   else:
-    raise ValueError('load_modle\' parameter model should only be rhfcn or wasdn.')
+    raise ValueError('load_model\' parameter model should only be rhfcn or wasdn.')
 
   model.load_state_dict(T.load(path))
   model = model.to(device)
